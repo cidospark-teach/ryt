@@ -1,0 +1,121 @@
+﻿@{
+    var user = _userManager.GetUserAsync(User).Result;
+}
+
+<Partial name="_SendRewardSuccessPartial" />
+<div class="modal fade" id="fund" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="wey-fundWalletContainer mx-auto">
+                    <div class="wey-fund-1">
+                        <div class="wey-fundWalletFont"><p>Fund Wallet</p></div>
+                        <div class="wey-fundExplain"><p>Use the details below to send money to your wallet.</p></div>
+                    </div>
+                    <div class="wey-fund-2">
+                        
+                             <div class="mb-3" hidden>
+                                <label for="userId" class="form-label wey-EnterAmount"></label>
+                            @if (user != null)
+                            {
+                            <input type="text" id="userId" value="@user.Id"form-control wey-input">
+                                
+                            }
+                            </div> 
+                    @*         <div class="mb-3" hidden>label
+                                <label for="userId" class="form-label wey-EnterAmount"></label>
+                                <input type="text" asp-for="@user.Email" form-control wey-input">
+                            </div> *@
+                                                                                  
+                            <div class="mb-3">
+                                <label for="EnterAmount" class="form- wey-EnterAmount">Enter Amount</label>
+                                <input id="fundInput" placeholder="NGN 0.00" class="form-control wey-input">
+                            </div>
+                            <div class="dropdown">
+                                <label class="form-label wey-EnterAmount">Payment Type</label>
+                                <select class="form-select">
+                                    <option>Paystack</option>
+                                </select>
+
+                                @* <input type="hidden" asp-controller="Dashboard" asp-action="Transfer" form-control wey-input"> *@
+
+
+                            </div>
+                            <div class="loader-panel">
+                                <img class="hideItem" id="loader-fund-img" src="~/Images/loader.gif" style="width:30px" />
+                            </div>
+                            <button id="btnFund" class="btn btn-outline-light wey-fund-submit send-button button" href="#" role="button">Send</button>
+                        
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .send-button{
+        background-color: #6938EF;
+    }
+
+    .send-button:hover{
+            background-color: #5120d9;
+            color: white;
+    }
+</style>
+
+<script>
+
+    let userId = document.querySelector("#userId")
+    let fundInput = document.querySelector("#fundInput")
+    let btnFund = document.querySelector("#btnFund")
+    let loaderFund = document.querySelector("#loader-fund-img");
+
+
+    function removeFundLoader() {
+        fundInput.value = "";
+        btnFund.classList.remove("hideItem");
+        loaderFund.classList.add("hideItem");
+    }
+    function showFundLoader() {
+        btnFund.classList.add("hideItem");
+        loaderFund.classList.remove("hideItem");
+    }
+
+    btnFund.addEventListener("click", () => {
+
+        showFundLoader();
+        fetch(`FundWallet?amt=${fundInput.value}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                let output = '';
+                if (data.code == "200") {
+                    window.location.href = data.message;
+                }
+                else if (data.code == "400") {
+                    output = `
+                    <div style="display:flex;">
+                    <i class="fa fa-exclamation-circle fa-2x" style="color:red;"></i>
+                    <p style="margin-left:20px;"> ${data.message} </p>
+                    </div>
+                    `;
+                    removeFundLoader();
+                }
+                document.getElementById('resultModalContent').innerHTML = output;
+
+                $("#withdraw").modal("hide")
+                $('#sendRewardSuccess').modal('show');
+            })
+            .catch()
+
+    })
+
+
+
+</script>                    

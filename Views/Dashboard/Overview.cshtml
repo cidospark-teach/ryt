@@ -1,0 +1,294 @@
+﻿@model OverviewViewModel
+@{
+    ViewData["Title"] = "Overview";
+    var user = _userManager.GetUserAsync(User).Result;
+    IList<string> userRoles = new List<string>();
+    if (user != null)
+    {
+        userRoles = _userManager.GetRolesAsync(user).Result;
+    }
+    string tableToShow = ViewBag.TableToShow;
+    var fundErr = ViewBag.FundErrMsg;
+}
+
+<Partial name="_FundingPartial" />
+<Partial name="_PaymentSDKGatewayPartial" />
+
+<div class="ryts-9-container-RYTS-9 animated fadeIn">
+    <div class="ryts-9-welcome-panel">
+        <div id="ryts-9-greeting-area">
+            <div class="ryts-9-greetings">Good afternoon @if(user != null){ <span>@user.FirstName @user.LastName</span>},</div>
+            <p id="ryts-9-greeting-area2">Welcome to your Dashboard <img id="ryts-9-emoji-image" src="/Images/ryts-9-emoji.png" /></p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(fundErr))
+    {
+        <div>@fundErr</div>
+    }
+
+    <div class="ryts-9-wallet-panel">
+        <div class="ryts-9-balance-panel">
+            <div class="ryts-9-balance-area1">
+                <div id="ryts-9-wallet-balance">My Wallet Balance</div>
+                @if (userRoles.Any(x => x.ToLower().Equals("student")))
+                {
+                    <button id="ryts-9-withdraw-area" data-bs-toggle="modal" data-bs-target="#fund">Add Money</button>
+                }
+                else if (userRoles.Any(x => x.ToLower().Equals("teacher")))
+                {
+                    <button id="ryts-9-withdraw-area" data-bs-toggle="modal" data-bs-target="#withdraw">Withdraw</button>
+                }
+            </div>
+            <div class="ryts-9-balance-area2">
+                <p id="ryts-9-funds-area" id="bal"><span>&#8358;</span>@Model.Balance</p>
+                @if (Model.Status.ToLower().Equals("active"))
+                {
+                    <p id="ryts-9-active-area">@Model.Status</p>
+                }else{
+                    <p id="ryts-9-active-area" style="color:red;">@Model.Status</p>
+                }
+            </div>
+        </div>
+        @if (userRoles.Any(x => x.ToLower().Equals("student")))
+        {
+            <div class="ryts-9-received-panel">
+                <div class="ryts-9-inner-received-panel">
+                    <div class="ryts-9-money-box">
+                        <p id="ryts-9-total-money">Total money sent</p>
+                        <p id="ryts-9-total-money-area"><span>&#8358;</span>@Model.AmountSent</p>
+                    </div>
+                    <div class="ryts-9-button-area">
+                        <img id="ryts-9-send-icon" src="/Images/ryt-9-icon.png" />
+                    </div>
+                </div>
+            </div>
+
+        }
+        else if (userRoles.Any(x => x.ToLower().Equals("teacher")))
+        {
+            <div class="ryts-9-received-panel">
+                <div class="ryts-9-inner-received-panel">
+                    <div class="ryts-9-money-box">
+                        <p id="ryts-9-total-money">Total money received</p>
+                        <p id="ryts-9-total-money-area"><span>&#8358;</span>@Model.AmountReceived</p>
+                    </div>
+                    <div class="ryts-9-button-area">
+                        <img id="ryts-9-send-icon" src="/Images/ryt-9-icon.png" />
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+    <div class="ryt-row" style="background-color:#F5F5F5">
+        <div style="font-weight:bold;margin-top:35px">Transaction History</div>
+        <br/>
+        <div class="ryts-9-frame-transfer" style="background:white">
+            @if (userRoles.Any(x => x.ToLower().Equals("student")))
+            {
+                <div class="ryts-9-frame-19" style="background:#F5F5F5">
+                    <div class="ryts-9-frame-1a">
+
+                        <div class="ryts-9-frame-1b">
+
+                            @if (tableToShow.ToLower().Equals("fund"))
+                            {
+                                <a asp-action="overview" asp-route-tableToShow="fund" class="toggle-button active ryts-9-received">Funding</a>
+
+                            }
+                            else
+                            {
+                                    <a asp-action="overview" asp-route-tableToShow="fund" class="toggle-button ryts-9-received">Funding</a>
+                            }
+
+                            @* <div class="ryts-9-divider-1c"></div> *@
+                        </div>
+                        @if (tableToShow.ToLower().Equals("transfer"))
+                        {
+                                    <a asp-action="overview" asp-route-tableToShow="transfer" class="toggle-button active ryts-9-sent">Transfer</a>
+                        }
+                        else
+                        {
+                            <a asp-action="overview" asp-route-tableToShow="transfer" class="toggle-button ryts-9-sent">Transfer</a>
+
+                        }
+
+                    </div>
+                    <div class="ryts-9-divider-1d"></div>
+                </div>
+                <table class="neo-table-container" style="background:white">
+                    @if (tableToShow.ToLower().Equals("fund"))
+                    {
+                        <thead>
+                            <tr id="neo-table-head">
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Date/Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model?.MyFundings == null)
+                            {
+                                <tr>
+                                    <td class="p-5" colspan="3">You have no funding transaction history yet</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var transaction in Model.MyFundings.OrderByDescending(x => x.CreatedOn))
+                                {
+                                    <tr style="color:dimgray">
+                                        <td>@transaction.Description</td>
+                                        <td style="color:#34A853">+ <span>@transaction.Amount</span></td>
+                                        <td>@transaction.CreatedOn</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    }
+                    @if (tableToShow.ToLower().Equals("transfer"))
+                    {
+                        <thead>
+                            <tr id="neo-table-head">
+                                <th>Name of teacher</th>
+                                <th>Amount sent</th>
+                                <th>Date/Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model?.MyTransferTransactions == null)
+                            {
+                                <tr>
+                                    <td class="p-5" colspan="3">You have no funding transaction history yet</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var transaction in Model.MyTransferTransactions.OrderByDescending(x => x.dateTime))
+                                {
+                                    <tr style="color:dimgray">
+                                        <td>@transaction.NameOfTeacher</td>
+                                        <td style="color:red">- <span>@transaction.Amount</span></td>
+                                        <td>@transaction.dateTime</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    }
+                </table>
+            }
+            else if (userRoles.Any(x => x.ToLower().Equals("teacher")))
+            {
+                <div class="ryts-9-frame-19" style="background:#F5F5F5">
+                    <div class="ryts-9-frame-1a">
+
+                        <div class="ryts-9-frame-1b">
+                            @if (tableToShow.ToLower().Equals("received"))
+                            {
+                                <a asp-action="overview" asp-route-tableToShow="received" class="toggle-button active ryts-9-received">Received</a>
+
+                            }
+                            else
+                            {
+                                    <a asp-action="overview" asp-route-tableToShow="received" class="toggle-button ryts-9-received">Received</a>
+
+                            }
+                            @* <div class="ryts-9-divider-1c"></div> *@
+                        </div>
+                        @if (tableToShow.ToLower().Equals("sent"))
+                        {
+                                <a asp-action="overview" asp-route-tableToShow="sent" class="toggle-button active ryts-9-sent">Sent</a>
+
+                        }
+                        else
+                        {
+                                <a asp-action="overview" asp-route-tableToShow="sent" class="toggle-button ryts-9-sent">Sent</a>
+
+                        }
+
+                    </div>
+                    <div class="ryts-9-divider-1d"></div>
+                </div>
+                <table class="neo-table-container" style="background:white">
+                @if (tableToShow.ToLower().Equals("received"))
+                {
+                    <thead>
+                        <tr id="neo-table-head">
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Date/Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model?.MyReceivedTransactions == null)
+                        {
+                            <tr>
+                                <td class="p-5" colspan="3">You have no funding transaction history yet</td>
+                            </tr>
+                        }
+                        else
+                        {
+                                @foreach (var transaction in Model.MyReceivedTransactions.OrderByDescending(x => x.timeOfTransaction))
+                            {
+                                <tr style="color:dimgray">
+                                    <td>@transaction.Description</td>
+                                    <td style="color:#34A853">+ <span>@transaction.Amount</span></td>
+                                    <td>@transaction.timeOfTransaction</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                }
+                @if (tableToShow.ToLower().Equals("sent"))
+                {
+                    <thead>
+                        <tr id="neo-table-head">
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Date/Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model?.MySentTransactions == null)
+                        {
+                            <tr>
+                                <td class="p-5" colspan="3">You have no funding transaction history yet</td>
+                            </tr>
+                        }
+                        else
+                        {
+                                @foreach (var transaction in Model.MySentTransactions.OrderByDescending(x => x.timeOfTransaction))
+                            {
+                                <tr style="color:dimgray">
+                                    <td>@transaction.Description</td>
+                                    <td style="color:red">- <span>@transaction.Amount</span></td>
+                                    <td>@transaction.timeOfTransaction</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                }
+                </table>
+            }
+        </div>
+
+    </div>
+</div>
+
+
+
+<script>
+    function toggleTable(showTableId, hideTableId, activeButtonId, inactiveButtonId) {
+        const showTable = document.getElementById(showTableId);
+        const hideTable = document.getElementById(hideTableId);
+        const activeButton = document.getElementById(activeButtonId);
+        const inactiveButton = document.getElementById(inactiveButtonId);
+
+        showTable.style.display = 'table';
+        hideTable.style.display = 'none';
+
+        activeButton.classList.add('active');
+        inactiveButton.classList.remove('active');
+    }
+</script>

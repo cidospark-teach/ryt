@@ -1,0 +1,145 @@
+﻿<style>
+    .loader-panel {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding-top: 10px;
+    }
+
+    .showItem {
+        display: block;
+    }
+
+    .hideItem {
+        display: none;
+    }
+</style>
+<Partial name="_SendRewardSuccessPartial" />
+<div class="modal fade" id="withdraw" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="ryt-row ryt-white" style="width:60%; margin: 20px auto; background-color:#F2F4F7">
+                    <div class="" style="margin:5%">
+                        <div class="ryt-center ryt-margin-bottom">
+                            <img src="~/images/image 5.png">
+                        </div>
+                        <div class="ryt-row">
+                            <div class="ryt-col s6 ryt-padding ryt-center ryt-panel" style="background-color:#F2F4F7">PAY WITH CARD</div>
+                            <div class="ryt-col s6 ryt-padding ryt-center ryt-panel ryt-text-white" style="background-color:#6938EF"> PAY WITH BANK</div>
+                        </div>
+                        <div class="ryt-row ryt-margin-top">
+                            <label class="ryt-col s12">AMOUNT</label>
+                            <input class="ryt-col s12 ryt-padding ryt-round-large ryt-panel ryt-border" type="number" placeholder="NGN 0.00" id="amountToPayInput">
+                        </div>
+                        <div class="ryt-row ryt-margin-top">
+                            <label class="ryt-col s12">BANK</label>
+                            <select type="" class="ryt-col s12 ryt-padding ryt-round-large ryt-panel ryt-border" placeholder="Enter amount" id="bankInput">
+                                <option class="ryt-panel" aria-placeholder="no">Select Bank</option>
+                                <option value="zenith"></option>
+                                <option value="fidelity">Fidelity Bank</option>
+                                <option value="skye">Skye Bank</option>
+                                <option value="first">First Bank</option>
+                                <option value="wema">wema Bank</option>
+                            </select>
+                        </div>
+                        <div class="ryt-row ryt-margin-top">
+                            <label class="ryt-col s12">ACCOUNT NUMBER</label>
+                            <input class="ryt-col s12 ryt-padding ryt-round-large ryt-panel ryt-border" type="number" placeholder="Enter account number" id="accountNumInput">
+                        </div>
+                        <div class="loader-panel">
+                            <img class="hideItem" id="loader-pay-img" src="~/Images/loader.gif" style="width:30px" />
+                        </div>
+                        <div class="ryt-row ryt-margin-top">
+                            <button style="background-color: #6938EF" class="ryt-text-white ryt-col s12 ryt-padding ryt-round-large ryt-panel ryt-border" placeholder="Enter account number" id="btnPay">PAY NGN</button>
+                        </div>
+                        <div class="ryt-center ryt-margin-top">
+                            <img src="~/images/Frame 8916.png">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+//let amtToDisplay = document.querySelector("#amountToPayDiv")
+let amountToPayInput = document.querySelector("#amountToPayInput")
+let bankInput = document.querySelector("#bankInput")
+let accountNumInput = document.querySelector("#accountNumInput")
+let btnPay = document.querySelector("#btnPay")
+let loaderPay = document.querySelector("#loader-pay-img");
+
+
+
+function removePayLoader() {
+    amountToPayInput.value = "";
+    accountNumInput.value = "";
+    btnPay.classList.remove("hideItem");
+    loaderPay.classList.add("hideItem");
+}
+function showPayLoader() {
+    btnPay.classList.add("hideItem");
+    loaderPay.classList.remove("hideItem");
+}
+
+btnPay.addEventListener("click", () => {
+    
+    showPayLoader();
+    fetch(`Withdraw?bank=${bankInput.value}&amt=${amountToPayInput.value}&acc=${accountNumInput.value}`,
+    {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        let output = ''; 
+        let isRedirect = false;
+            if (data.code == "200") {
+                // let newBal = `<span>&#8358;</span>${data.newBal}`
+                // document.querySelector("#bal").innerHTML = newBal
+            //     output = `
+               
+            //     <div class="ryts-2-font">
+                 
+            //       <div style="justify-content:center; text-align:center;" >
+            //       <img src="~/Images/Succes-image.png" alt="Success Image">
+            //        </div>
+            //         <p class="ryts-2-p1">Money is on the way</p>
+            //         <div class="ryts-2-text-wrap">
+            //             <p class="ryts-2-p2">
+            //                 Congratulations <span class="ryts-2-patience">${data.name}.</span> 
+            //                 you have withdraw ${data.amount}<br> Your money is on it's way to your bank. Cheers
+            //             </p>
+                        
+            //         </div>
+            //     </div>
+            // `;
+                isRedirect = true;
+                    window.location.href = data.rtnUrl;
+            }
+            else if (data.code == "400") {
+                output = `
+                <div style="display:flex;">
+                <i class="fa fa-exclamation-circle fa-2x" style="color:red;"></i>
+                <p style="margin-left:20px;"> ${data.message} </p>
+                </div>
+                `;
+                removePayLoader();
+            }
+           if(!isRedirect){
+                    document.getElementById('resultModalContent').innerHTML = output;
+
+                    $("#withdraw").modal("hide")
+                    $('#sendRewardSuccess').modal('show');
+           }
+    })
+    .catch()
+
+})
+
+
+
+</script>
